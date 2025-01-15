@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>朵朵小算盤</title>
+    <style>
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+        }
+
+        .button {
+            width: 80px;
+            height: 80px;
+            margin: 5px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+
+        .blue { 
+            background-color: rgba(74, 144, 226, 0.8);
+            border: 1px solid #4a90e2;
+        }
+        .red { 
+            background-color: rgba(231, 76, 60, 0.8);
+            border: 1px solid #e74c3c;
+        }
+        .green { 
+            background-color: rgba(46, 204, 113, 0.8);
+            border: 1px solid #2ecc71;
+        }
+
+        #stats {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            margin: 15px 0;
+            font-size: 14px;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+        }
+
+        #reset, #delete {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 5px;
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
+        #reset {
+            background-color: rgba(52, 73, 94, 0.8);
+            border: 1px solid #34495e;
+        }
+
+        #reset:hover {
+            background-color: rgba(44, 62, 80, 0.8);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+
+        #delete {
+            background-color: rgba(255, 107, 107, 0.8);
+            border: 1px solid #ff6b6b;
+        }
+
+        #delete:hover {
+            background-color: rgba(255, 82, 82, 0.8);
+            box-shadow: 0 0 15px rgba(255, 82, 82, 0.3);
+        }
+
+        #history-display {
+            background-color: rgba(0, 0, 0, 0.7);
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            display: grid;
+            grid-template-columns: repeat(10, auto);
+            grid-template-rows: repeat(6, auto);
+            gap: 4px;
+            justify-content: center;
+            border: 1px solid #00ff00;
+        }
+
+        .history-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 0;
+            transition: transform 0.2s;
+        }
+
+        .history-cell {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00ff00;
+            border-radius: 50%;
+        }
+
+        h1 {
+            color: #00ff00;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        @media screen and (max-width: 480px) {
+            .button {
+                width: 60px;
+                height: 60px;
+                font-size: 14px;
+                margin: 3px;
+            }
+
+            #delete, #reset {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+
+            #stats {
+                padding: 10px;
+                font-size: 13px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .history-dot, .history-cell {
+                width: 15px;
+                height: 15px;
+            }
+        }
+
+        @media screen and (max-width: 320px) {
+            .button {
+                width: 50px;
+                height: 50px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix"></canvas>
+    <h1>百家樂</h1>
+    <div class="container">
+        <div class="button-group">
+            <button class="button blue" onclick="selectColor('blue')">閒</button>
+            <button class="button red" onclick="selectColor('red')">莊</button>
+            <button class="button green" onclick="selectColor('green')">和</button>
+        </div>
+        <div class="button-group">
+            <button id="delete" onclick="deleteLastRecord()">刪除上一步</button>
+            <button id="reset" onclick="resetGame()">重置遊戲</button>
+        </div>
+        <div id="stats">
+            <p>已進行回合: <span id="rounds">0</span>/60</p>
+            <p>下一次預測:</p>
+            <p><span id="prediction"></span></p>
+        </div>
+
+        <div>
+            <p>歷史紀錄：</p>
+            <div id="history-display"></div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲邏輯
+        let history = [];
+        let rounds = 0;
+        const MAX_ROUNDS = 60;
+
+        function selectColor(color) {
+            if (rounds >= MAX_ROUNDS) {
+                alert('遊戲已結束！請重置開始新遊戲。');
+                return;
+            }
+
+            history.push(color);
+            rounds++;
+            updateStats();
+
+            if (rounds >= MAX_ROUNDS) {
+                alert('遊戲結束！');
+            }
+        }
+
+        function deleteLastRecord() {
+            if (history.length > 0) {
+                history.pop();
+                rounds--;
+                updateStats();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('rounds').textContent = rounds;
+            
+            let blueCount = history.filter(c => c === 'blue').length;
+            let redCount = history.filter(c => c === 'red').length;
+            let greenCount = history.filter(c => c === 'green').length;
+            
+            // 計算連續出現的次數
+            let currentStreak = 1;
+            let lastColor = history[history.length - 1];
+            for (let i = history.length - 2; i >= 0; i--) {
+                if (history[i] === lastColor) {
+                    currentStreak++;
+                } else {
+                    break;
+                }
+            }
+
+            // 分析最近6局的趨勢
+            let recentGames = history.slice(-6);
+            let recentBlue = recentGames.filter(c => c === 'blue').length;
+            let recentRed = recentGames.filter(c => c === 'red').length;
+
+            // 預測邏輯
+            let prediction = '';
+            if (rounds === 0) {
+                prediction = '請選擇 莊/閒';
+            } else {
+                // 如果連續出現同一個結果超過3次
+                if (currentStreak >= 3) {
+                    prediction = lastColor === 'red' ? '閒' : '莊';
+                } 
+                // 如果最近6局某一方出現次數特別多（超過4次）
+                else if (recentBlue >= 4) {
+                    prediction = '莊';
+                } else if (recentRed >= 4) {
+                    prediction = '閒';
+                }
+                // 根據整體比例來判斷
+                else {
+                    let totalCount = blueCount + redCount;
+                    let blueRatio = blueCount / totalCount;
+                    let redRatio = redCount / totalCount;
+                    
+                    // 如果某一方的比例明顯偏高（超過55%）
+                    if (blueRatio > 0.55) {
+                        prediction = '莊';
+                    } else if (redRatio > 0.55) {
+                        prediction = '閒';
+                    } else {
+                        // 接近平衡時，考慮最近一次的結果
+                        prediction = lastColor === 'red' ? '閒' : '莊';
+                    }
+                }
+            }
+            
+            document.getElementById('prediction').textContent = prediction;
+
+            const historyDisplay = document.getElementById('history-display');
+            historyDisplay.innerHTML = '';
+            
+            for (let i = 0; i < 60; i++) {
+                const cell = document.createElement('div');
+                const column = Math.floor(i / 6); // 每6個換一列
+                const row = i % 6;                // 在每列中的位置
+                
+                cell.style.gridRow = (row + 1).toString();
+                cell.style.gridColumn = (column + 1).toString();
+                
+                if (i < history.length) {
+                    cell.className = `history-dot ${history[i]}`;
+                } else {
+                    cell.className = 'history-cell';
+                }
+                historyDisplay.appendChild(cell);
+            }
+        }
+
+        function resetGame() {
+            history = [];
+            rounds = 0;
+            updateStats();
+        }
+
+        // Matrix rain effect
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = canvas.width/fontSize;
+
+        const rainDrops = Array(Math.floor(columns)).fill(1);
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for(let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i*fontSize, rainDrops[i]*fontSize);
+
+                if(rainDrops[i]*fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        setInterval(draw, 30);
+
+        // 初始化遊戲
+        updateStats();
+    </script>
+</body>
+</html>
